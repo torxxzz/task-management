@@ -8,9 +8,10 @@ const PRIORITY_COLORS: Record<Task['priority'], { bar: string; bg: string; text:
   low: { bar: '#1D9E75', bg: '#E1F5EE', text: '#0F6E56' },
 };
 
-function formatDate(d: string | undefined) {
-  if (!d) return null;
-  return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+function formatDate(d: string | number | undefined) {
+  if (d === undefined || d === null) return null;
+  const date = typeof d === 'number' ? new Date(d) : new Date(d + 'T00:00:00');
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 function isOverdue(d: string | undefined, completed: boolean) {
@@ -61,6 +62,9 @@ export default function TaskCard({ task, onToggle, onEdit, onDelete }: TaskCardP
               {formatDate(task.due)}{overdue ? ' · overdue' : ''}
             </span>
           )}
+          <span className="task-date created-date">
+            Created {formatDate(task.createdAt)}
+          </span>
         </div>
       </div>
 

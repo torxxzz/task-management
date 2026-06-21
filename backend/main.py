@@ -69,6 +69,11 @@ app.add_middleware(
 )
 
 
+@app.get('/')
+async def root():
+    return {'message': 'Backend is running'}
+
+
 def apply_sort(tasks, sort: str):
     if sort == 'priority':
         order = {'high': 0, 'medium': 1, 'low': 2}

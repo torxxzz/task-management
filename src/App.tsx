@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Search, Moon, Sun } from 'lucide-react';
 import Sidebar from './components/Sidebar.tsx';
 import StatsGrid from './components/StatsGrid.tsx';
 import TaskList from './components/TaskList.tsx';
@@ -19,41 +19,55 @@ function AppInner() {
   const [activeCategory, setActiveCategory] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window === 'undefined') return 'light';
+    const saved = window.localStorage.getItem('theme');
+    if (saved === 'light' || saved === 'dark') return saved;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  useEffect(() => {
+    document.body.classList.toggle('dark', theme === 'dark');
+    document.body.classList.toggle('light', theme === 'light');
+    window.localStorage.setItem('theme', theme);
+  }, [theme]);
 
   const { toast, showToast } = useToast();
   const { tasks, stats, loading, error, addTask, editTask, toggleDone, removeTask, clearDone } = useTasks({
     filter, search, sort, category: activeCategory,
   });
 
-  if (error) showToast(error);
+  useEffect(() => {
+    if (error) showToast(error);
+  }, [error, showToast]);
 
   const openAdd = () => { setEditingTask(null); setModalOpen(true); };
   const openEdit = (task: Task) => { setEditingTask(task); setModalOpen(true); };
   const closeModal = () => { setModalOpen(false); setEditingTask(null); };
 
-  const handleSave = async (data: TaskCreateData | TaskUpdateData) => {
+  const handleSave: (data: TaskCreateData | TaskUpdateData) => Promise<void> = async (data) => {
     if (editingTask) {
       const err = await editTask(editingTask.id, data as TaskUpdateData);
       showToast(err ?? 'Task updated');
     } else {
       const err = await addTask(data as TaskCreateData);
-      showToast(err ?? 'Task added');
+      showToast(err ?? 'Created task');
     }
   };
 
-  const handleToggle = async (id: number) => {
+  const handleToggle: (id: number) => Promise<void> = async (id) => {
     const t = tasks.find(x => x.id === id);
     const err = await toggleDone(id);
     if (err) showToast(err);
     else showToast(t?.completed ? 'Marked as active' : 'Task completed ✓');
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete: (id: number) => Promise<void> = async (id) => {
     const err = await removeTask(id);
-    showToast(err ?? 'Task deleted');
+    showToast(err ?? 'Deleted task');
   };
 
-  const handleClearDone = async () => {
+  const handleClearDone: () => Promise<void> = async () => {
     const err = await clearDone();
     showToast(err ?? 'Completed tasks cleared');
   };
@@ -86,6 +100,15 @@ function AppInner() {
             <option value="title">Title A–Z</option>
             <option value="due">Due date</option>
           </select>
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
           <button className="btn-primary" onClick={openAdd}>
             <Plus size={16} /> Add task
           </button>
