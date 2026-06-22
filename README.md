@@ -88,10 +88,6 @@ python main.py
 
 This starts the FastAPI server at `http://127.0.0.1:8000` with auto-reload enabled.
 
-**Interactive API Documentation:**
-- **Swagger UI:** `http://127.0.0.1:8000/docs` — Test API endpoints with an interactive interface
-- **ReDoc:** `http://127.0.0.1:8000/redoc` — Browse API documentation in an alternative format
-
 ### Start the frontend
 
 In a separate terminal:
