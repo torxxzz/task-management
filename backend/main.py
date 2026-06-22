@@ -58,7 +58,7 @@ class CategoryOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-app = FastAPI(title='TaskPulse API')
+app = FastAPI(title='Task Management API')
 
 app.add_middleware(
     CORSMiddleware,

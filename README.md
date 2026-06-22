@@ -1,6 +1,6 @@
-# TaskPulse
+# Task Management
 
-TaskPulse is a simple task management app with a React + Vite frontend and a FastAPI backend. It supports task creation, editing, completion, filtering, sorting, categories, and light/dark mode.
+Task Management is a simple task management app with a React + Vite frontend and a FastAPI backend. It supports task creation, editing, completion, filtering, sorting, categories, and light/dark mode.
 
 ## Overview
 
@@ -41,42 +41,44 @@ TaskPulse is a simple task management app with a React + Vite frontend and a Fas
 ### 1. Install frontend dependencies
 
 ```bash
-cd c:\Users\victo\task-management
+cd .
 npm install
 ```
 
 ### 2. Install backend dependencies
 
 ```bash
-cd c:\Users\victo\task-management\backend
+cd backend
 python -m pip install -r requirements.txt
 ```
 
 ### 3. Configure backend environment
 
-Create `backend/.env` and add a `DATABASE_URL` value.
-
-Example PostgreSQL:
+Create `backend/.env` and add a `DATABASE_URL` value with your actual database credentials:
 
 ```.env
-DATABASE_URL=postgresql://user:password@localhost:5432/taskpulse
+DATABASE_URL=postgresql://your_username:your_password@localhost:5432/task_management
 ```
+
+Replace `your_username` and `your_password` with your actual PostgreSQL credentials. If using a different database host or port, update those as well.
 
 ## Run the app
 
 ### Start the backend
 
 ```bash
-cd c:\Users\victo\task-management\backend
-python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+cd backend
+python main.py
 ```
+
+This starts the FastAPI server at `http://127.0.0.1:8000` with auto-reload enabled.
 
 ### Start the frontend
 
 In a separate terminal:
 
 ```bash
-cd c:\Users\victo\task-management
+cd .
 npm run dev
 ```
 
