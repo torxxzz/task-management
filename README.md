@@ -22,8 +22,8 @@ Task Management is a simple task management app with a React + Vite frontend and
 
 ### Frontend
 
-- `react` — UI library for building interactive components.
-- `react-dom` — renders React components to the browser DOM.
+- `react` — UI (User Interface) library for building interactive components.
+- `react-dom` — renders React components to the browser DOM (Document Object Model).
 - `vite` — fast frontend dev server and build tool.
 - `@vitejs/plugin-react` — enables React support in Vite.
 - `lucide-react` — icon library used for buttons and UI controls.
@@ -32,8 +32,8 @@ Task Management is a simple task management app with a React + Vite frontend and
 ### Backend
 
 - `fastapi` — Python web framework for building APIs quickly.
-- `uvicorn[standard]` — ASGI server used to run the FastAPI app.
-- `sqlalchemy` — ORM for database access and models.
+- `uvicorn[standard]` — Asynchronous Server Gateway Interface (ASGI) server used to run the FastAPI app.
+- `sqlalchemy` — Object-Relational Mapping (ORM) for database access and models.
 - `python-dotenv` — loads `.env` config values like `DATABASE_URL`.
 
 ## Setup
@@ -87,6 +87,10 @@ python main.py
 ```
 
 This starts the FastAPI server at `http://127.0.0.1:8000` with auto-reload enabled.
+
+**Interactive API Documentation:**
+- **Swagger UI:** `http://127.0.0.1:8000/docs` — Test API endpoints with an interactive interface
+- **ReDoc:** `http://127.0.0.1:8000/redoc` — Browse API documentation in an alternative format
 
 ### Start the frontend
 
@@ -145,6 +149,23 @@ npm run dev
 - Explain the theme toggle and localStorage persistence.
 - Show `vite.config.ts` proxy so frontend `/api` calls reach the backend.
 - Walk through backend routes in `backend/main.py` and the database models.
+
+## Security
+
+This project includes security best practices:
+
+- **CORS Configuration** — Restricted to localhost development origins. Update `backend/main.py` to add your production domain.
+- **Input Validation** — All API inputs validated with Pydantic (field length limits, format validation, enum constraints).
+- **Security Headers** — Includes `X-Content-Type-Options`, `X-Frame-Options`, and `X-XSS-Protection` headers.
+- **Password Protection** — Database credentials stored in `.env` files (not committed to git).
+- **API Timeouts** — Frontend API calls have a 10-second timeout to prevent hanging requests.
+- **Error Handling** — Error messages don't expose sensitive information.
+
+**Note:** This is a development project. For production deployment, implement:
+- JWT/OAuth authentication
+- Rate limiting
+- HTTPS/SSL enforcement
+- User-based data isolation
 
 ## Troubleshooting
 

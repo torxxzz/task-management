@@ -1,31 +1,46 @@
-from fastapi import FastAPI, HTTPException, Query, Depends
-from pydantic import BaseModel
-from typing import List, Optional
+from fastapi import FastAPI, HTTPException, Query, Depends, Path
+from pydantic import BaseModel, Field, field_validator
+from typing import List, Optional, Literal
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import engine, get_db
 from models import TaskDB, CategoryDB
 import time
+import re
 
 from database import Base
 Base.metadata.create_all(bind=engine)
 
 
 class TaskCreate(BaseModel):
-    title: str
-    desc: str = ''
-    priority: str = 'medium'
-    category: str = ''
-    due: str = ''
+    title: str = Field(..., min_length=1, max_length=120)
+    desc: str = Field(default='', max_length=1000)
+    priority: Literal['low', 'medium', 'high'] = 'medium'
+    category: str = Field(default='', max_length=50)
+    due: str = Field(default='', pattern=r'^(\d{4}-\d{2}-\d{2})?$')
+
+    @field_validator('due')
+    @classmethod
+    def validate_due_date(cls, v):
+        if v and not re.match(r'^\d{4}-\d{2}-\d{2}$', v):
+            raise ValueError('Due date must be in YYYY-MM-DD format')
+        return v
 
 
 class TaskUpdate(BaseModel):
-    title: Optional[str] = None
-    desc: Optional[str] = None
-    priority: Optional[str] = None
-    category: Optional[str] = None
-    due: Optional[str] = None
+    title: Optional[str] = Field(None, min_length=1, max_length=120)
+    desc: Optional[str] = Field(None, max_length=1000)
+    priority: Optional[Literal['low', 'medium', 'high']] = None
+    category: Optional[str] = Field(None, max_length=50)
+    due: Optional[str] = Field(None, pattern=r'^(\d{4}-\d{2}-\d{2})?$')
     completed: Optional[bool] = None
+
+    @field_validator('due')
+    @classmethod
+    def validate_due_date(cls, v):
+        if v and not re.match(r'^\d{4}-\d{2}-\d{2}$', v):
+            raise ValueError('Due date must be in YYYY-MM-DD format')
+        return v
 
 
 class TaskOut(BaseModel):
@@ -42,10 +57,17 @@ class TaskOut(BaseModel):
 
 
 class CategoryCreate(BaseModel):
-    name: str
-    color: str
-    bg: str
-    text: str
+    name: str = Field(..., min_length=1, max_length=50)
+    color: str = Field(..., pattern=r'^#[0-9A-Fa-f]{6}$')
+    bg: str = Field(..., pattern=r'^#[0-9A-Fa-f]{6}$')
+    text: str = Field(..., pattern=r'^#[0-9A-Fa-f]{6}$')
+
+    @field_validator('color', 'bg', 'text')
+    @classmethod
+    def validate_colors(cls, v):
+        if not re.match(r'^#[0-9A-Fa-f]{6}$', v):
+            raise ValueError('Color must be a valid hex color (e.g., #FF5733)')
+        return v
 
 
 class CategoryOut(BaseModel):
@@ -60,13 +82,27 @@ class CategoryOut(BaseModel):
 
 app = FastAPI(title='Task Management API')
 
+# Configure CORS - restrict to specific origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*'],
+    allow_origins=[
+        'http://localhost:5173',      # Vite dev server
+        'http://localhost:3000',      # Alternative dev port
+        # 'https://yourdomain.com',   # Production domain (uncomment and update)
+    ],
     allow_credentials=True,
-    allow_methods=['*'],
-    allow_headers=['*'],
+    allow_methods=['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allow_headers=['Content-Type'],
 )
+
+# Add security headers
+@app.middleware('http')
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    return response
 
 
 @app.get('/')
@@ -99,7 +135,7 @@ async def get_tasks(
     elif filter == 'completed':
         query = query.filter(TaskDB.completed == True)
     if category:
-        query = query.filter(TaskDB.category == category)
+        query = query.filter(TaskDB.category.ilike(category))  # Case-insensitive
     if search:
         q = f"%{search.lower()}%"
         query = query.filter(TaskDB.title.ilike(q) | TaskDB.desc.ilike(q))
@@ -186,8 +222,13 @@ async def create_category(data: CategoryCreate, db: Session = Depends(get_db)):
 
 
 @app.delete('/api/categories/{name}')
-async def delete_category(name: str, db: Session = Depends(get_db)):
-    cat = db.query(CategoryDB).filter(CategoryDB.name == name).first()
+async def delete_category(
+    name: str = Path(..., min_length=1, max_length=50),
+    db: Session = Depends(get_db)
+):
+    if not name.strip():
+        raise HTTPException(status_code=400, detail='Category name cannot be empty')
+    cat = db.query(CategoryDB).filter(CategoryDB.name.ilike(name)).first()
     if not cat:
         raise HTTPException(status_code=404, detail='Category not found')
     db.delete(cat)

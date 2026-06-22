@@ -36,23 +36,37 @@ export type TaskUpdateData = Partial<TaskCreateData> & {
 };
 
 const apiFetch = async <T = any>(path: string, options: RequestInit = {}): Promise<T> => {
-  const res = await fetch(path, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    ...options,
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-  if (!res.ok) {
-    const message = await res.text();
-    throw new Error(message || `Request failed: ${res.status}`);
+  try {
+    const res = await fetch(path, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      ...options,
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      // Don't expose raw error messages to prevent information disclosure
+      const errorMessage = res.status === 500 ? 'Internal server error' : `Request failed with status ${res.status}`;
+      throw new Error(errorMessage);
+    }
+
+    if (res.status === 204) {
+      return null as unknown as T;
+    }
+
+    return res.json() as Promise<T>;
+  } catch (error) {
+    if (error instanceof TypeError && error.name === 'AbortError') {
+      throw new Error('Request timeout - please try again');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
   }
-
-  if (res.status === 204) {
-    return null as unknown as T;
-  }
-
-  return res.json() as Promise<T>;
 };
 
 const buildQuery = (params: Record<string, string | undefined>) => {
