@@ -52,15 +52,30 @@ cd backend
 python -m pip install -r requirements.txt
 ```
 
-### 3. Configure backend environment
+### 3. Configure environment variables
 
-Create `backend/.env` and add a `DATABASE_URL` value with your actual database credentials:
+This project uses environment variables for both frontend and backend configuration. Example files are provided to show the required variables:
 
+**Frontend** - Copy `.env.example` to `.env`:
+```bash
+cp .env.example .env
+```
+Then fill in your Supabase credentials:
+```.env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_anon_key_here
+```
+
+**Backend** - Copy `backend/.env.example` to `backend/.env`:
+```bash
+cp backend/.env.example backend/.env
+```
+Then fill in your database credentials:
 ```.env
 DATABASE_URL=postgresql://your_username:your_password@localhost:5432/task_management
 ```
 
-Replace `your_username` and `your_password` with your actual PostgreSQL credentials. If using a different database host or port, update those as well.
+Replace placeholders with your actual credentials. If using a different database host or port, update those as well.
 
 ## Run the app
 
