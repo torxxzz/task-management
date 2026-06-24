@@ -63,6 +63,11 @@ function AppInner() {
   };
 
   const handleDelete: (id: number) => Promise<void> = async (id) => {
+    const confirmed = window.confirm('Do you want to delete this task?');
+    if (!confirmed) {
+      return;
+    }
+
     const err = await removeTask(id);
     showToast(err ?? 'Deleted task');
   };
