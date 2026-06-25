@@ -5,30 +5,15 @@ import type { Task } from '../api/TaskApi.tsx';
 type TaskListProps = {
   tasks: Task[];
   loading: boolean;
-  activeCategory: string;
-  onCategoryChange: (category: string) => void;
   onToggle: (id: number) => void;
+  onOpen: (task: Task) => void;
   onEdit: (task: Task) => void;
   onDelete: (id: number) => void;
 };
 
-export default function TaskList({ tasks, loading, activeCategory, onCategoryChange, onToggle, onEdit, onDelete }: TaskListProps) {
-  const allCats = [...new Set(tasks.map(t => t.category))].sort();
-
+export default function TaskList({ tasks, loading, onToggle, onOpen, onEdit, onDelete }: TaskListProps) {
   return (
     <div>
-      <div className="filter-row">
-        {['', ...allCats].map(cat => (
-          <button
-            key={cat || '__all'}
-            className={`filter-chip ${activeCategory === cat ? 'active' : ''}`}
-            onClick={() => onCategoryChange(cat)}
-          >
-            {cat || 'All'}
-          </button>
-        ))}
-      </div>
-
       {loading ? (
         <div className="loading">
           <div className="spinner" />
@@ -47,6 +32,7 @@ export default function TaskList({ tasks, loading, activeCategory, onCategoryCha
               key={task.id}
               task={task}
               onToggle={onToggle}
+              onOpen={onOpen}
               onEdit={onEdit}
               onDelete={onDelete}
             />

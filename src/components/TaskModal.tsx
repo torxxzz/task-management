@@ -17,9 +17,11 @@ type TaskModalProps = {
   task?: Task | null;
   onSave: (data: TaskCreateData | TaskUpdateData) => Promise<void> | void;
   onClose: () => void;
+  readOnly?: boolean;
+  onEdit?: () => void;
 };
 
-export default function TaskModal({ task, onSave, onClose }: TaskModalProps) {
+export default function TaskModal({ task, onSave, onClose, readOnly = false, onEdit }: TaskModalProps) {
   const { categories } = useCategories();
   const [form, setForm] = useState<TaskFormState>(EMPTY);
   const [error, setError] = useState('');
@@ -46,6 +48,7 @@ export default function TaskModal({ task, onSave, onClose }: TaskModalProps) {
   };
 
   const handleSave = async () => {
+    if (readOnly) return;
     if (!form.title.trim()) {
       setError('Title is required.');
       titleRef.current?.focus();
@@ -70,7 +73,7 @@ export default function TaskModal({ task, onSave, onClose }: TaskModalProps) {
     <div className="modal-bg" onClick={handleBackgroundClick}>
       <div className="modal" onKeyDown={handleKey} role="dialog" aria-modal="true" aria-label={task ? 'Edit task' : 'Add task'}>
         <div className="modal-header">
-          <h2>{task ? 'Edit task' : 'Add task'}</h2>
+          <h2>{readOnly ? 'Task details' : task ? 'Edit task' : 'Add task'}</h2>
           <button className="icon-btn" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </div>
 
@@ -84,6 +87,7 @@ export default function TaskModal({ task, onSave, onClose }: TaskModalProps) {
             placeholder="What needs to be done?"
             maxLength={120}
             className={error ? 'input-error' : ''}
+            disabled={readOnly}
           />
           {error && <p className="error-msg">{error}</p>}
         </div>
@@ -96,13 +100,14 @@ export default function TaskModal({ task, onSave, onClose }: TaskModalProps) {
             onChange={setField('desc')}
             placeholder="Optional details…"
             rows={3}
+            disabled={readOnly}
           />
         </div>
 
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="f-priority">Priority</label>
-            <select id="f-priority" value={form.priority} onChange={setField('priority')}>
+            <select id="f-priority" value={form.priority} onChange={setField('priority')} disabled={readOnly}>
               <option value="low">Low</option>
               <option value="medium">Medium</option>
               <option value="high">High</option>
@@ -110,7 +115,7 @@ export default function TaskModal({ task, onSave, onClose }: TaskModalProps) {
           </div>
           <div className="form-group">
             <label htmlFor="f-category">Label / Category</label>
-            <select id="f-category" value={form.category} onChange={setField('category')}>
+            <select id="f-category" value={form.category} onChange={setField('category')} disabled={readOnly}>
               {categories.map(c => (
                 <option key={c.name} value={c.name}>{c.name}</option>
               ))}
@@ -120,17 +125,23 @@ export default function TaskModal({ task, onSave, onClose }: TaskModalProps) {
 
         <div className="form-group">
           <label htmlFor="f-due">Due date</label>
-          <input id="f-due" type="date" value={form.due} onChange={setField('due')} />
+          <input id="f-due" type="date" value={form.due} onChange={setField('due')} disabled={readOnly} />
         </div>
 
         <div className="modal-actions">
           <button className="btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn-primary" onClick={handleSave}>
-            <Save size={15} /> Save task
-          </button>
+          {readOnly ? (
+            <button className="btn-primary" onClick={onEdit}>
+              <Save size={15} /> Edit task
+            </button>
+          ) : (
+            <button className="btn-primary" onClick={handleSave}>
+              <Save size={15} /> Save task
+            </button>
+          )}
         </div>
 
-        <p className="modal-hint">Ctrl + Enter to save</p>
+        <p className="modal-hint">{readOnly ? 'Close to return to the list' : 'Ctrl + Enter to save'}</p>
       </div>
     </div>
   );

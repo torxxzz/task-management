@@ -24,21 +24,37 @@ type TaskCardProps = {
   onToggle: (id: number) => void;
   onEdit: (task: Task) => void;
   onDelete: (id: number) => void;
+  onOpen: (task: Task) => void;
 };
 
-export default function TaskCard({ task, onToggle, onEdit, onDelete }: TaskCardProps) {
+export default function TaskCard({ task, onToggle, onEdit, onDelete, onOpen }: TaskCardProps) {
   const { getCategory } = useCategories();
   const cat = getCategory(task.category);
   const pri = PRIORITY_COLORS[task.priority];
   const overdue = isOverdue(task.due, task.completed);
 
   return (
-    <div className={`task-card ${task.completed ? 'done' : ''}`}>
+    <div
+      className={`task-card ${task.completed ? 'done' : ''}`}
+      role="button"
+      tabIndex={0}
+      onClick={() => onOpen(task)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpen(task);
+        }
+      }}
+      aria-label={`Open details for ${task.title}`}
+    >
       <div className="priority-bar" style={{ background: pri.bar }} />
 
       <button
         className={`check-btn ${task.completed ? 'checked' : ''}`}
-        onClick={() => onToggle(task.id)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle(task.id);
+        }}
         aria-label={task.completed ? 'Mark incomplete' : 'Mark complete'}
       >
         {task.completed && <span className="check-icon">✓</span>}
@@ -69,10 +85,10 @@ export default function TaskCard({ task, onToggle, onEdit, onDelete }: TaskCardP
       </div>
 
       <div className="task-actions">
-        <button className="icon-btn" onClick={() => onEdit(task)} aria-label="Edit task">
+        <button className="icon-btn" onClick={(e) => { e.stopPropagation(); onEdit(task); }} aria-label="Edit task">
           <Pencil size={15} />
         </button>
-        <button className="icon-btn del" onClick={() => onDelete(task.id)} aria-label="Delete task">
+        <button className="icon-btn del" onClick={(e) => { e.stopPropagation(); onDelete(task.id); }} aria-label="Delete task">
           <Trash2 size={15} />
         </button>
       </div>
